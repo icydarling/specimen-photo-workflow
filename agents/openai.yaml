@@ -1,0 +1,4 @@
+interface:
+  display_name: "科研样本照片：可选模块处理"
+  short_description: "植株、稻穗、精米的抠图、去盆、背景、比例尺、居中及亮度模块可独立开关"
+  default_prompt: "使用 $specimen-photo-workflow，按我指定的开关组合处理照片：抠图、基部去盆、背景、几何变换、居中、比例尺、亮度及导出；未启用的模块保持现状。"
