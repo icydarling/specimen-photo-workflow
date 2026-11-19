@@ -78,6 +78,35 @@ def calculate(intervals, scales, bar_mm, spread_warning=0.01):
     }
 
 
+def qualify(result, units=False, endpoints=False, plane=False, transform=False,
+            evidence_note='', measured_bar_px=None, export_tolerance_px=1):
+    if not math.isfinite(export_tolerance_px) or export_tolerance_px < 0:
+        raise ValueError('Export tolerance must be finite and nonnegative')
+    evidence = dict(units=units, endpoints=endpoints, plane=plane, transform=transform)
+    reasons = ['Evidence not verified: '+k for k,v in evidence.items() if not v]
+    if not evidence_note.strip():
+        reasons.append('Missing calibration evidence note')
+    reasons.extend(result['warnings'])
+    state = 'pending_review' if reasons else 'ready_for_drawing'
+    delta = None
+    if measured_bar_px is not None:
+        if not math.isfinite(measured_bar_px) or measured_bar_px <= 0:
+            raise ValueError('Measured exported bar must be finite and positive')
+        delta = measured_bar_px-result['bar_px_rounded']
+        if abs(delta) > export_tolerance_px:
+            reasons.append('Exported bar differs from planned integer line length')
+            state = 'pending_review'
+        elif not reasons:
+            state = 'export_verified'
+    result.update(calibration_status=state, evidence_verified=evidence,
+                  evidence_note=evidence_note, review_reasons=reasons,
+                  exported_bar_px_measured=measured_bar_px,
+                  exported_bar_error_px=delta, export_tolerance_px=export_tolerance_px,
+                  imaging_plane_verified=bool(plane),
+                  evidence_validation='caller_assertions_not_image_recognition')
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--interval", type=interval, action="append", required=True,
@@ -89,9 +118,19 @@ def main():
                         help="Relative interval-spread review threshold (default 0.01; not an accuracy guarantee)")
     parser.add_argument("--source-id", default="unspecified", help="Sample or source identifier; not proof of provenance")
     parser.add_argument("--output", type=Path, help="New JSON record; existing files are not overwritten")
+    parser.add_argument('--units-verified', action='store_true')
+    parser.add_argument('--endpoints-verified', action='store_true')
+    parser.add_argument('--plane-verified', action='store_true')
+    parser.add_argument('--transform-verified', action='store_true')
+    parser.add_argument('--evidence-note', default='')
+    parser.add_argument('--measured-bar-px', type=positive)
+    parser.add_argument('--export-tolerance-px', type=float, default=1)
     args = parser.parse_args()
     try:
         result = calculate(args.interval, args.scale, args.bar_mm, args.spread_warning)
+        qualify(result, args.units_verified, args.endpoints_verified, args.plane_verified,
+                args.transform_verified, args.evidence_note, args.measured_bar_px,
+                args.export_tolerance_px)
         result["source_id"] = args.source_id
         serialized = json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
         if args.output:
