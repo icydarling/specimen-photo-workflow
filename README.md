@@ -1,5 +1,7 @@
 # specimen-photo-workflow
 
+**新版 v2** [查看新版技能和脱敏样图](specimen-photo-workflow-v2/README.md)。
+
 面向植株、稻穗、精米等科研样本照片的 Codex 技能。以 Photoshop 可编辑图层和蒙版为主，按需要选择处理模块，保留真实组织、来源和核验记录。
 
 ## 功能

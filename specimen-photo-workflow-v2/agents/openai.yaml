@@ -1,0 +1,4 @@
+interface:
+  display_name: "科研样本照片"
+  short_description: "植株、稻穗与精米的原片成图、局部修订、比例尺校准和只读验收"
+  default_prompt: "使用 $specimen-photo-workflow-v2 按我指定的模块处理或验收科研样本照片，原图只读，保留真实组织。"
